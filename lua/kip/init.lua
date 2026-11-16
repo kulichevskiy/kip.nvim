@@ -1,10 +1,10 @@
--- inline-edit.nvim: Cursor-style "select → describe → replaced in place" AI edits,
+-- kip.nvim: Cursor-style "select → describe → replaced in place" AI edits,
 -- implemented as a real Vim operator so it composes with every motion and text object.
 
 local api = vim.api
 local M = {}
 
-local ns = api.nvim_create_namespace("inline_edit")
+local ns = api.nvim_create_namespace("kip")
 
 M.config = {
   keymaps = {
@@ -15,16 +15,16 @@ M.config = {
   -- Also accepts "anthropic", "claude_cli", or a function(request, on_done) -> cancel_fn.
   backend = "auto",
   anthropic = {
-    model = "claude-opus-5-5",
+    model = "claude-haiku-5-5",
     effort = "low", -- low | medium | high | xhigh | max
     max_tokens = 64000,
     api_key_env = "ANTHROPIC_API_KEY",
     base_url = "https://api.anthropic.com",
-    fallbacks = true, -- server-side fallback model if a request is declined
+    fallbacks = false, -- server-side fallback on a declined request (not available for Haiku)
   },
   claude_cli = {
     cmd = "claude",
-    model = "opus",
+    model = "haiku",
     effort = "low",
     extra_args = {},
   },
@@ -41,8 +41,8 @@ M.config = {
 M.last_prompt = nil
 M._fresh = false
 M._rearm = false
-local OPFUNC = "v:lua.require'inline_edit'.opfunc"
-local key_ns = api.nvim_create_namespace("inline_edit_keys")
+local OPFUNC = "v:lua.require'kip'.opfunc"
+local key_ns = api.nvim_create_namespace("kip_keys")
 local pending_op = nil -- how the operator in flight was invoked: { visual, count, cursor, keys }
 local jobs = {} -- [buf] = { [mark_id] = cancel_fn }
 
@@ -57,13 +57,13 @@ Reply with the replacement for the selected fragment and nothing else. Your enti
 - If the instruction asks a question or cannot be applied, still reply only with text that belongs in the file (for a no-op, the selection unchanged).]]
 
 local function notify(msg, level)
-  vim.notify(msg, level or vim.log.levels.INFO, { title = "inline-edit" })
+  vim.notify(msg, level or vim.log.levels.INFO, { title = "kip" })
 end
 
 local function set_highlights()
-  api.nvim_set_hl(0, "InlineEditSelection", { default = true, link = "Visual" })
-  api.nvim_set_hl(0, "InlineEditSpinner", { default = true, link = "DiagnosticInfo" })
-  api.nvim_set_hl(0, "InlineEditApplied", { default = true, link = "DiffAdd" })
+  api.nvim_set_hl(0, "KipSelection", { default = true, link = "Visual" })
+  api.nvim_set_hl(0, "KipSpinner", { default = true, link = "DiagnosticInfo" })
+  api.nvim_set_hl(0, "KipApplied", { default = true, link = "DiffAdd" })
 end
 
 --- Range covered by the last operator/visual area, 0-based, end-exclusive.
@@ -158,7 +158,7 @@ local function run(buf, mark, kind, instruction)
   if not r then
     return
   end
-  local provider = require("inline_edit.provider")
+  local provider = require("kip.provider")
   local backend, berr = provider.resolve(M.config)
   if not backend then
     api.nvim_buf_del_extmark(buf, ns, mark)
@@ -179,7 +179,7 @@ local function run(buf, mark, kind, instruction)
     frame = frame % #SPINNER + 1
     spin_mark = api.nvim_buf_set_extmark(buf, ns, cur.srow, 0, {
       id = spin_mark,
-      virt_text = { { " " .. SPINNER[frame] .. " AI editing… (<C-c> to cancel) ", "InlineEditSpinner" } },
+      virt_text = { { " " .. SPINNER[frame] .. " AI editing… (<C-c> to cancel) ", "KipSpinner" } },
       virt_text_pos = "eol",
     })
   end
@@ -240,7 +240,7 @@ local function run(buf, mark, kind, instruction)
         local flash = api.nvim_buf_set_extmark(buf, ns, cur.srow, cur.scol, {
           end_row = erow,
           end_col = ecol,
-          hl_group = "InlineEditApplied",
+          hl_group = "KipApplied",
         })
         vim.defer_fn(function()
           if api.nvim_buf_is_valid(buf) then
@@ -324,7 +324,7 @@ function M.edit_region(buf, r, kind, instruction, op)
   local mark = api.nvim_buf_set_extmark(buf, ns, r.srow, r.scol, {
     end_row = r.erow,
     end_col = r.ecol,
-    hl_group = "InlineEditSelection",
+    hl_group = "KipSelection",
     right_gravity = false,
     end_right_gravity = true,
     priority = 200,
@@ -333,7 +333,7 @@ function M.edit_region(buf, r, kind, instruction, op)
     run(buf, mark, kind, instruction)
     return
   end
-  require("inline_edit.ui").prompt({
+  require("kip.ui").prompt({
     config = M.config.ui,
     win = api.nvim_get_current_win(),
     srow = r.srow,
@@ -415,7 +415,7 @@ function M.cancel(buf)
 end
 
 local function create_commands()
-  api.nvim_create_user_command("InlineEdit", function(o)
+  api.nvim_create_user_command("Kip", function(o)
     local buf = api.nvim_get_current_buf()
     local last = api.nvim_buf_get_lines(buf, o.line2 - 1, o.line2, false)[1] or ""
     local r = { srow = o.line1 - 1, scol = 0, erow = o.line2 - 1, ecol = #last }
@@ -425,7 +425,7 @@ local function create_commands()
     end
   end, { range = true, nargs = "*", desc = "AI-edit the given lines (prompts when no instruction is given)" })
 
-  api.nvim_create_user_command("InlineEditCancel", function()
+  api.nvim_create_user_command("KipCancel", function()
     M.cancel()
   end, { desc = "Cancel running AI edits in this buffer" })
 end
@@ -434,7 +434,7 @@ function M.setup(opts)
   M.config = vim.tbl_deep_extend("force", M.config, opts or {})
   set_highlights()
   api.nvim_create_autocmd("ColorScheme", {
-    group = api.nvim_create_augroup("inline_edit_hl", { clear = true }),
+    group = api.nvim_create_augroup("kip_hl", { clear = true }),
     callback = set_highlights,
   })
   create_commands()

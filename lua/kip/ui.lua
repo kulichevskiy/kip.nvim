@@ -13,7 +13,7 @@ function M.prompt(opts)
 
   local buf = api.nvim_create_buf(false, true)
   vim.bo[buf].bufhidden = "wipe"
-  vim.bo[buf].filetype = "inline_edit_prompt"
+  vim.bo[buf].filetype = "kip_prompt"
   vim.b[buf].completion = false -- keep completion popups (blink.cmp) out of the prompt
 
   local width = math.max(20, math.min(cfg.width, api.nvim_win_get_width(win) - 6))
@@ -128,7 +128,7 @@ function M.prompt(opts)
     history(1)
   end)
 
-  local group = api.nvim_create_augroup("inline_edit_prompt_" .. buf, { clear = true })
+  local group = api.nvim_create_augroup("kip_prompt_" .. buf, { clear = true })
   api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
     group = group,
     buffer = buf,

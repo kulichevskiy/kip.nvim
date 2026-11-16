@@ -1,4 +1,4 @@
-# inline-edit.nvim
+# kip.nvim
 
 Точечное AI-редактирование прямо в Neovim, как Cmd+K в Cursor: выбрал фрагмент → написал, что сделать → текст заменился на месте.
 
@@ -14,8 +14,8 @@
 | `.` | повторить **ту же инструкцию** на новом месте, без окна |
 | `u` | отменить правку (одна правка = один шаг undo) |
 | `<C-c>` | отменить запрос, пока он выполняется |
-| `:[range]InlineEdit [инструкция]` | то же из командной строки |
-| `:InlineEditCancel` | отменить запросы в буфере |
+| `:[range]Kip [инструкция]` | то же из командной строки |
+| `:KipCancel` | отменить запросы в буфере |
 
 `<leader>` в LazyVim — пробел. Сторонние text objects (mini.ai, treesitter) тоже работают.
 
@@ -37,7 +37,7 @@ API быстрее (нет старта CLI); для него достаточн
 ```lua
 {
   dir = "~/Code/neovim-cursor",
-  name = "inline-edit.nvim",
+  name = "kip.nvim",
   event = "VeryLazy",
   opts = {},
 }
@@ -50,14 +50,14 @@ opts = {
   keymaps = { operator = "<leader>k", line = "<leader>kk" }, -- false — не создавать
   backend = "auto",
   anthropic = {
-    model = "claude-opus-5-5",
+    model = "claude-haiku-5-5",
     effort = "low",
     max_tokens = 64000,
     api_key_env = "ANTHROPIC_API_KEY",
     base_url = "https://api.anthropic.com",
-    fallbacks = true,
+    fallbacks = false,
   },
-  claude_cli = { cmd = "claude", model = "opus", effort = "low", extra_args = {} },
+  claude_cli = { cmd = "claude", model = "haiku", effort = "low", extra_args = {} },
   context_lines = 500, -- сколько строк файла до/после выделения видит модель
   ui = { width = 64, border = "rounded", title = " AI edit " },
   flash_ms = 700,      -- подсветка применённого текста
@@ -65,7 +65,7 @@ opts = {
 }
 ```
 
-Группы подсветки: `InlineEditSelection`, `InlineEditSpinner`, `InlineEditApplied`.
+Группы подсветки: `KipSelection`, `KipSpinner`, `KipApplied`.
 
 ## Тесты
 

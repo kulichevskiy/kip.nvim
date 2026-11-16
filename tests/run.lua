@@ -6,7 +6,7 @@ vim.g.mapleader = " "
 vim.o.columns, vim.o.lines = 80, 24
 
 local seen = {}
-local ie = require("inline_edit")
+local ie = require("kip")
 ie.setup({
   flash_ms = 0,
   backend = function(req, on_done)
@@ -40,7 +40,7 @@ local function print(msg)
   io.stdout:write(msg .. "\n")
 end
 local function in_prompt()
-  return vim.bo.filetype == "inline_edit_prompt"
+  return vim.bo.filetype == "kip_prompt"
 end
 local function buf_lines()
   return vim.api.nvim_buf_get_lines(0, 0, -1, false)
@@ -175,7 +175,7 @@ do
       return not in_prompt()
     end, "prompt close")
     assert(buf_lines()[1] == "stay")
-    local ns = vim.api.nvim_get_namespaces()["inline_edit"]
+    local ns = vim.api.nvim_get_namespaces()["kip"]
     assert(#vim.api.nvim_buf_get_extmarks(0, ns, 0, -1, {}) == 0, "extmarks left behind")
   end)
   print((ok and "ok   " or "FAIL ") .. "cancel prompt" .. (ok and "" or (": " .. err)))
@@ -219,14 +219,14 @@ do
     finish()
     vim.wait(100)
     assert(buf_lines()[3] == "a", "cancelled edit was applied")
-    local ns = vim.api.nvim_get_namespaces()["inline_edit"]
+    local ns = vim.api.nvim_get_namespaces()["kip"]
     assert(#vim.api.nvim_buf_get_extmarks(0, ns, 0, -1, {}) == 0, "extmarks left behind")
   end)
   print((ok and "ok   " or "FAIL ") .. "concurrent buffer edits + cancel" .. (ok and "" or (": " .. err)))
   failed = failed + (ok and 0 or 1)
 end
 
--- :InlineEdit with a range and inline instruction
+-- :Kip with a range and inline instruction
 do
   local ok, err = pcall(function()
     ie.config.backend = function(req, on_done)
@@ -235,12 +235,12 @@ do
     end
     vim.cmd("enew!")
     vim.api.nvim_buf_set_lines(0, 0, -1, false, { "a", "b", "c" })
-    vim.cmd("2,3InlineEdit upper")
+    vim.cmd("2,3Kip upper")
     wait(function()
       return vim.deep_equal(buf_lines(), { "a", "B", "C" })
-    end, ":InlineEdit")
+    end, ":Kip")
   end)
-  print((ok and "ok   " or "FAIL ") .. ":InlineEdit range" .. (ok and "" or (": " .. err)))
+  print((ok and "ok   " or "FAIL ") .. ":Kip range" .. (ok and "" or (": " .. err)))
   failed = failed + (ok and 0 or 1)
 end
 
