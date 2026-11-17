@@ -11,7 +11,7 @@ ie.setup({
   flash_ms = 0,
   backend = function(req, on_done)
     seen[#seen + 1] = req
-    local instr = req.user:match("Instruction: (.*)$")
+    local instr = req.instruction
     local out
     if instr == "upper" then
       out = vim.fn.toupper(req.selection)

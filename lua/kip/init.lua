@@ -123,11 +123,15 @@ local function build_request(buf, r, kind, instruction)
   parts[#parts + 1] = "<file>\n" .. before .. "<selection>" .. selection .. "</selection>" .. after .. "\n</file>"
   parts[#parts + 1] = ""
   parts[#parts + 1] = "Instruction: " .. instruction
+  parts[#parts + 1] = ""
+  -- The closing reminder keeps smaller models from rewriting the surrounding text as well.
+  parts[#parts + 1] = "Reply with the new text for what is between <selection> and </selection>, and nothing else. The rest of <file> is context only: do not rewrite, summarize or include it. Keep the formatting the selection already has (list markers, indentation, quotes) unless the instruction says otherwise."
 
   return {
     system = M.config.system_prompt or SYSTEM_PROMPT,
     user = table.concat(parts, "\n"),
     selection = selection,
+    instruction = instruction,
   }
 end
 
