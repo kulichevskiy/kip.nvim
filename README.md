@@ -2,6 +2,8 @@
 
 > `space` `k` `i` `p` — and the paragraph under your cursor is somebody else's problem.
 
+![kip.nvim demo](demo/kip.gif)
+
 **kip** is Cursor's Cmd+K for people who never left the terminal: pick some text, say what you want, and it's rewritten in place. No chat panel. No sidebar. No "Certainly! Here's the updated code".
 
 The trick is that kip isn't a command, it's an **operator** — a new verb in Vim's grammar, right next to `d`, `c` and `y`. So it works with every motion and text object you already have in your fingers:
@@ -16,6 +18,10 @@ The trick is that kip isn't a command, it's an **operator** — a new verb in Vi
 ```
 
 A small window pops up above the selection, you type something like *"add type hints"* or *"make this not embarrassing"*, hit `⏎`, and go back to work. The text swaps in when the model answers.
+
+It isn't only for code. Paragraphs, sentences and list items are text objects too:
+
+![kip.nvim editing Markdown prose](demo/kip-prose.gif)
 
 ## Why you might like it
 
@@ -105,6 +111,15 @@ Highlight groups, if you want to restyle them: `KipSelection`, `KipSpinner`, `Ki
 
 ```sh
 nvim --headless --clean -u NONE -l tests/run.lua
+```
+
+## Demo
+
+The GIFs above are real sessions: `demo/record.py` runs Neovim in a pty and presses the keys, `demo/render.py` turns the recording into a video. The edits are whatever the model answered; only the waiting is cut short. To re-record:
+
+```sh
+python3 demo/record.py code /tmp/session.json   # or: prose
+uv run --with pyte --with pillow --with fonttools demo/render.py /tmp/session.json demo/kip.mp4
 ```
 
 ## License
