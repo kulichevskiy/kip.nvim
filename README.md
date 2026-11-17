@@ -100,7 +100,6 @@ Highlight groups, if you want to restyle them: `KipSelection`, `KipSpinner`, `Ki
 
 - The model sees the file around your selection (500 lines each way by default), not your whole project. This is a scalpel, not an agent.
 - Blockwise visual selections (`<C-v>`) are treated as one continuous span from the first cell to the last, not as a rectangle.
-- The Anthropic API backend has been tested against a mock server but not yet against the real API. The `claude` CLI backend is the one in daily use.
 
 ## Tests
 
